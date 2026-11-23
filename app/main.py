@@ -25,6 +25,7 @@ def main() -> None:
     p_run = sub.add_parser("run", help="coleta e envia alertas")
     p_run.add_argument("--dias", type=int, default=config.DIAS_RETROATIVOS)
     p_run.add_argument("--sem-telegram", action="store_true", help="só imprime no terminal")
+    p_run.add_argument("--limite", type=int, default=10)
 
     args = parser.parse_args()
 
@@ -52,7 +53,7 @@ def main() -> None:
             novas = coletar(session, QueridoDiario(), hoje - timedelta(days=args.dias), hoje)
             print(f"Correspondências novas: {novas}")
             enviar = print if args.sem_telegram else enviar_mensagem
-            print(f"Alertas processados: {enviar_alertas(session, enviar)}")
+            print(f"Alertas processados: {enviar_alertas(session, enviar, limite=args.limite, marcar=not args.sem_telegram)}")
 
 
 if __name__ == "__main__":

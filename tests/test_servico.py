@@ -45,6 +45,6 @@ def test_alerta_e_enviado_uma_unica_vez():
     coletar(s, FonteFalsa(), date(2026, 11, 15), date(2026, 11, 22))
     mensagens: list[str] = []
 
-    assert enviar_alertas(s, mensagens.append) == 1
-    assert enviar_alertas(s, mensagens.append) == 0
+    assert enviar_alertas(s, mensagens.append, pausa=0) == 1
+    assert enviar_alertas(s, mensagens.append, pausa=0) == 0
     assert "licitação" in mensagens[0]
