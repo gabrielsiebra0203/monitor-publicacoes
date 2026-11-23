@@ -12,3 +12,5 @@ QD_TERRITORY_IDS = [
     t.strip() for t in os.getenv("QD_TERRITORY_IDS", "2304400").split(",") if t.strip()
 ]
 DIAS_RETROATIVOS = int(os.getenv("DIAS_RETROATIVOS", "7"))
+JWT_SECRET = os.getenv("JWT_SECRET", "")
+JWT_EXPIRA_MINUTOS = int(os.getenv("JWT_EXPIRA_MINUTOS", "60"))

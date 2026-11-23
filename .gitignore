@@ -1,5 +1,27 @@
+
+# Ambiente virtual
 .venv/
-__pycache__/
-*.pyc
-.pytest_cache/
+venv/
+
+# Credenciais e configurações locais
 .env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Arquivos temporários e backups
+*.bak
+*.log
+*.tmp
+
+# IDE e sistema operacional
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

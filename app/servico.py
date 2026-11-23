@@ -12,9 +12,12 @@ import time
 log = logging.getLogger(__name__)
 
 
+
 def coletar(session: Session, fonte, desde: date, ate: date) -> int:
-    """Busca cada palavra-chave ativa e grava o que for novo. Retorna o nº de correspondências novas."""
+    """Busca palavras-chave ativas e grava novas correspondências."""
     novas = 0
+    falhas = 0
+
     palavras = session.scalars(
         select(PalavraChave).where(PalavraChave.ativa.is_(True))
     ).all()
@@ -22,12 +25,32 @@ def coletar(session: Session, fonte, desde: date, ate: date) -> int:
     for palavra in palavras:
         try:
             itens = fonte.buscar(palavra.termo, desde, ate)
-        except httpx.HTTPError as exc:
-            log.warning("Falha ao buscar '%s' em %s: %s", palavra.termo, fonte.nome, type(exc).__name__)
+
+        except httpx.HTTPStatusError as exc:
+            falhas += 1
+            log.warning(
+                "Falha HTTP ao buscar '%s' em %s: status=%s",
+                palavra.termo,
+                fonte.nome,
+                exc.response.status_code,
+            )
+            continue
+
+        except httpx.RequestError as exc:
+            falhas += 1
+            log.warning(
+                "Falha de conexão ao buscar '%s' em %s: %s",
+                palavra.termo,
+                fonte.nome,
+                type(exc).__name__,
+            )
             continue
 
         for item in itens:
-            pub = session.scalar(select(Publicacao).where(Publicacao.url == item.url))
+            pub = session.scalar(
+                select(Publicacao).where(Publicacao.url == item.url)
+            )
+
             if pub is None:
                 pub = Publicacao(
                     fonte=item.fonte,
@@ -45,6 +68,7 @@ def coletar(session: Session, fonte, desde: date, ate: date) -> int:
                     Correspondencia.palavra_chave_id == palavra.id,
                 )
             )
+
             if ja_existe is None:
                 session.add(
                     Correspondencia(
@@ -54,8 +78,23 @@ def coletar(session: Session, fonte, desde: date, ate: date) -> int:
                     )
                 )
                 novas += 1
+
         session.commit()
+
+    if palavras and falhas == len(palavras):
+        raise RuntimeError(
+            "Coleta indisponível: todas as consultas à fonte falharam."
+        )
+
+    if falhas:
+        log.warning(
+            "Coleta parcialmente concluída: %s de %s consultas falharam.",
+            falhas,
+            len(palavras),
+        )
+
     return novas
+
 
 
 def formatar_alerta(c: Correspondencia) -> str:
