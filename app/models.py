@@ -45,3 +45,11 @@ class Correspondencia(Base):
 
     publicacao: Mapped[Publicacao] = relationship()
     palavra_chave: Mapped[PalavraChave] = relationship()
+
+    class Usuario(Base):
+        __tablename__ = "usuarios"
+
+        id: Mapped[int] = mapped_column(primary_key=True)
+        email: Mapped[str] = mapped_column(String(254), unique=True)
+        senha_hash: Mapped[str] = mapped_column(String(255))
+        criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora)
